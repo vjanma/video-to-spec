@@ -70,6 +70,22 @@ While reading, build a working map (jot it as notes if helpful):
 Do not skip screenshots: screens that appear without narration still belong
 in the PRD.
 
+**Classify the demo type** — it changes how much to trust the narration:
+- **Working-app recording:** a real cursor drives a real UI; you can see
+  clicks, loading states, typed input, and consistent chrome across frames.
+  Treat what happens on screen as ground truth.
+- **Scripted promo / vision reel:** polished motion graphics, voiceover-led,
+  cuts that skip the actual interaction, claims like "instantly" or "a fleet
+  of 100 agents." Much of the narration is aspirational marketing, not
+  demonstrated behavior.
+
+Decide which one this is and say so at the top of the PRD's Overview. For a
+promo, be stricter: narration-only capability claims (agent counts, speed
+superlatives, "automatically" with no visible result) go to Assumptions or
+Open Questions, not into Functional Requirements as if demonstrated. When the
+two types are mixed (a real UI with a marketing voiceover), judge each claim
+on whether a frame actually shows it.
+
 ## Step 4 — Write the PRD
 
 Read `$SKILL_DIR/references/prd-template.md` and follow its structure and
