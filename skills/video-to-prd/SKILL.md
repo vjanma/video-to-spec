@@ -22,8 +22,9 @@ otherwise `mktemp -d`), then run:
 bash $SKILL_DIR/scripts/process_video.sh "<input>" "$WORK"
 ```
 
-This downloads the video if it's a URL (720p max, plus YouTube captions when
-available), extracts 16kHz audio when no captions exist, and detects screen
+This downloads the video if it's a URL (1080p max — high enough that dense
+dashboard text stays legible — plus YouTube captions when available), extracts
+16kHz audio when no captions exist, and detects screen
 changes to produce timestamped keyframes in `$WORK/frames/`
 (`frame_MMmSSs.png`). It adapts automatically: low scene threshold for subtle
 UI transitions, interval sampling if the screen barely changes, capped when

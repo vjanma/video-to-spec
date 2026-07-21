@@ -26,8 +26,10 @@ WORKDIR="$(cd "$WORKDIR" && pwd)"
 VIDEO=""
 if [[ "$INPUT" =~ ^https?:// ]]; then
   command -v yt-dlp >/dev/null || err "yt-dlp not found (needed for URLs). Install with: brew install yt-dlp"
-  echo "Downloading video (<=720p) and captions..."
-  yt-dlp -f "bv*[height<=720]+ba/b[height<=720]/b" \
+  echo "Downloading video (<=1080p) and captions..."
+  # 1080p (not 720p): demo UIs are text-dense; the extra resolution keeps
+  # dashboard numbers and small labels legible in the extracted keyframes.
+  yt-dlp -f "bv*[height<=1080]+ba/b[height<=1080]/b" \
     --write-auto-subs --write-subs --sub-format vtt --sub-langs "en.*,en" \
     -o "$WORKDIR/video.%(ext)s" \
     --no-playlist "$INPUT" >&2
