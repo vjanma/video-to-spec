@@ -13,6 +13,8 @@ set -euo pipefail
 
 err() { echo "ERROR: $*" >&2; exit 1; }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 INPUT="${1:-}"; WORKDIR="${2:-}"
 [ -n "$INPUT" ] && [ -n "$WORKDIR" ] || err "usage: process_video.sh <file-or-youtube-url> <workdir>"
 command -v ffmpeg >/dev/null || err "ffmpeg not found. Install with: brew install ffmpeg"
@@ -49,67 +51,44 @@ if [ ! -f "$WORKDIR/captions.vtt" ]; then
   ffmpeg -y -v error -i "$VIDEO" -vn -ar 16000 -ac 1 -c:a pcm_s16le "$WORKDIR/audio.wav"
 fi
 
-# --- 3. Keyframe extraction via scene detection ---------------------------
-# Screen recordings transition subtly, so use a low threshold, then adapt.
+# --- 3. Keyframe selection ------------------------------------------------
+# Screen recordings transition subtly and unevenly: a busy stretch (e.g. a
+# slide deck) fires many scene changes while a content-rich intro barely trips
+# the detector. We detect scene changes at a low threshold, drop adjacent
+# near-duplicates with mpdecimate, then hand the timestamps to select_frames.py
+# — which guarantees timeline coverage, caps frames per bucket, and offsets each
+# capture past the transition so frames land on the settled screen, not a
+# motion-blurred crossfade.
 echo "Detecting screen changes..."
-extract_frames() {
-  local threshold="$1"
-  rm -f "$WORKDIR/frames/"*.png "$WORKDIR/scene_times.txt"
-  ffmpeg -y -v info -i "$VIDEO" \
-    -vf "select='gt(scene,$threshold)',showinfo" -fps_mode vfr \
-    "$WORKDIR/frames/raw_%04d.png" 2>&1 |
-    grep -o 'pts_time:[0-9.]*' | cut -d: -f2 > "$WORKDIR/scene_times.txt" || true
+detect_scenes() {   # $1=output file  $2=scene threshold
+  ffmpeg -v info -i "$VIDEO" \
+    -vf "select='gt(scene,$2)',mpdecimate,showinfo" -fps_mode vfr -f null - 2>&1 |
+    grep -o 'pts_time:[0-9.]*' | cut -d: -f2 > "$1" || true
 }
 
-extract_frames 0.1
-NFRAMES="$(ls "$WORKDIR/frames" 2>/dev/null | wc -l | tr -d ' ')"
-
-if [ "$NFRAMES" -gt 60 ]; then
-  echo "Too many changes ($NFRAMES) — raising threshold..."
-  extract_frames 0.25
-  NFRAMES="$(ls "$WORKDIR/frames" | wc -l | tr -d ' ')"
+CAND="$WORKDIR/cand_times.txt"
+detect_scenes "$CAND" 0.1
+NCAND="$(grep -c . "$CAND" 2>/dev/null || echo 0)"
+if [ "$NCAND" -gt 120 ]; then
+  echo "Very busy video ($NCAND changes) — raising threshold..."
+  detect_scenes "$CAND" 0.25
 fi
 
-if [ "$NFRAMES" -lt 5 ]; then
-  # Static screen recording: fall back to interval sampling (1 frame / 15s).
-  echo "Few scene changes detected ($NFRAMES) — sampling every 15s instead..."
-  rm -f "$WORKDIR/frames/"*.png
-  : > "$WORKDIR/scene_times.txt"
-  t=0
-  while [ "$t" -lt "$DURATION" ]; do
-    echo "$t" >> "$WORKDIR/scene_times.txt"
-    t=$((t + 15))
-  done
-  i=1
-  while read -r ts; do
-    ffmpeg -y -v error -ss "$ts" -i "$VIDEO" -frames:v 1 \
-      "$(printf "%s/frames/raw_%04d.png" "$WORKDIR" "$i")"
-    i=$((i + 1))
-  done < "$WORKDIR/scene_times.txt"
-fi
+# Turn raw candidates into a well-distributed, deduplicated, settled set.
+# select_frames.py also guarantees coverage when there are few/no scene
+# changes (a static recording), so no separate interval-sampling fallback.
+SEL="$WORKDIR/sel_times.txt"
+python3 "$SCRIPT_DIR/select_frames.py" "$DURATION" < "$CAND" > "$SEL"
 
-# Always include the first and last second of the video.
-FIRST_LAST_TIMES="0
-$((DURATION > 1 ? DURATION - 1 : 0))"
-n_existing="$(ls "$WORKDIR/frames" | wc -l | tr -d ' ')"
-i=$((n_existing + 1))
+# --- 4. Extract one settled frame per selected timestamp ------------------
 while read -r ts; do
-  ffmpeg -y -v error -ss "$ts" -i "$VIDEO" -frames:v 1 \
-    "$(printf "%s/frames/raw_%04d.png" "$WORKDIR" "$i")"
-  echo "$ts" >> "$WORKDIR/scene_times.txt"
-  i=$((i + 1))
-done <<< "$FIRST_LAST_TIMES"
-
-# --- 4. Rename frames to timestamped names, ordered by time ---------------
-paste -d' ' <(ls "$WORKDIR/frames"/raw_*.png | sort) "$WORKDIR/scene_times.txt" |
-while read -r png ts; do
   [ -n "$ts" ] || continue
   secs="${ts%%.*}"
   mm=$((secs / 60)); ss=$((secs % 60))
   dest="$(printf "%s/frames/frame_%02dm%02ds.png" "$WORKDIR" "$mm" "$ss")"
-  mv "$png" "$dest" 2>/dev/null || true
-done
-rm -f "$WORKDIR/frames"/raw_*.png "$WORKDIR/scene_times.txt"
+  ffmpeg -y -v error -ss "$ts" -i "$VIDEO" -frames:v 1 "$dest"
+done < "$SEL"
+rm -f "$CAND" "$SEL"
 
 # --- 5. Summary -----------------------------------------------------------
 NFRAMES="$(ls "$WORKDIR/frames" | wc -l | tr -d ' ')"
