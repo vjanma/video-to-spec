@@ -81,4 +81,4 @@ PRD-<product>.md          (references/prd-template.md structure)
 
 ## License
 
-MIT
+Apache 2.0

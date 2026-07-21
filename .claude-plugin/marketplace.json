@@ -16,7 +16,7 @@
       },
       "homepage": "https://github.com/vjanma/video-to-prd",
       "repository": "https://github.com/vjanma/video-to-prd",
-      "license": "MIT",
+      "license": "Apache-2.0",
       "category": "productivity",
       "keywords": [
         "prd",
