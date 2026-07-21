@@ -1,0 +1,4 @@
+interface:
+  display_name: "Video to PRD"
+  short_description: "Turn product videos into evidence-backed PRDs"
+  default_prompt: "Use $video-to-prd to analyze this product video, capture key product screenshots, and create a detailed evidence-backed PRD."

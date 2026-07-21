@@ -1,0 +1,10 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+.video-to-prd-work/
+storyboard/
+evidence_manifest.json
+*.wav
+*.mp4
+*.webm
