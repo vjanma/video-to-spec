@@ -1,0 +1,31 @@
+{
+  "name": "video-to-prd",
+  "owner": {
+    "name": "Vj Anma",
+    "email": "vjanma@gmail.com"
+  },
+  "description": "Marketplace for the video-to-prd plugin: convert screen recordings into implementation-ready PRDs.",
+  "plugins": [
+    {
+      "name": "video-to-prd",
+      "source": "./",
+      "description": "Turn a screen-recording video (local file or YouTube link) into an implementation-ready Product Requirements Document using scene-detection screenshots and audio transcription.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Vj Anma"
+      },
+      "homepage": "https://github.com/vjanma/video-to-prd",
+      "repository": "https://github.com/vjanma/video-to-prd",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "prd",
+        "product-requirements",
+        "video",
+        "screen-recording",
+        "youtube",
+        "transcription"
+      ]
+    }
+  ]
+}

@@ -20,18 +20,31 @@ Point it at a product demo and it will:
 
 ## Install
 
+**Option A — plugin install, straight from GitHub (recommended).** In any Claude Code session:
+
+```
+/plugin marketplace add vjanma/video-to-prd
+/plugin install video-to-prd@video-to-prd
+```
+
+The skill is then invoked as `/video-to-prd:video-to-prd`, and updates arrive via `/plugin marketplace update video-to-prd`.
+
+**Option B — clone + symlink (personal skill, un-namespaced).**
+
 ```bash
 git clone https://github.com/vjanma/video-to-prd.git
-ln -s "$(pwd)/video-to-prd" ~/.claude/skills/video-to-prd
+ln -s "$(pwd)/video-to-prd/skills/video-to-prd" ~/.claude/skills/video-to-prd
 ```
+
+This makes it available as plain `/video-to-prd`.
 
 ## Usage
 
 In any Claude Code session:
 
 ```
-/video-to-prd ~/Desktop/demo-recording.mov
-/video-to-prd https://www.youtube.com/watch?v=XXXXXXXXXXX
+/video-to-prd ~/Desktop/demo-recording.mov            (symlink install)
+/video-to-prd:video-to-prd https://youtu.be/XXXXXXX   (plugin install)
 ```
 
 Or just ask naturally: *"turn this screen recording into a PRD"*.
