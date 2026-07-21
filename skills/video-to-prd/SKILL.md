@@ -26,10 +26,11 @@ This downloads the video if it's a URL (1080p max — high enough that dense
 dashboard text stays legible — plus YouTube captions when available), extracts
 16kHz audio when no captions exist, and detects screen
 changes to produce timestamped keyframes in `$WORK/frames/`
-(`frame_MMmSSs.png`). It adapts automatically: low scene threshold for subtle
-UI transitions, interval sampling if the screen barely changes, capped when
-the video is busy. Read `$WORK/meta.txt` for duration, frame count, and
-whether captions were found.
+(`frame_MMmSSs.png`). Selection guarantees coverage across the whole timeline
+(so a busy tail can't starve a content-rich intro), caps frames per time-bucket,
+drops near-duplicates, and offsets each capture past the transition so frames
+land on the settled screen rather than a motion-blurred crossfade. Read
+`$WORK/meta.txt` for duration, frame count, and whether captions were found.
 
 If the script fails, show the user the error — common causes are a missing
 dependency (it names the `brew install` fix), a private/region-locked YouTube
@@ -58,6 +59,14 @@ will be built from visuals alone and will have more inferred content.
 3. For each screenshot, pair it with the transcript lines within ~10 seconds
    of its timestamp — the narration usually explains exactly what is on
    screen at that moment.
+4. Watch for **sparse or blurry stretches**: if a span of the timeline has few
+   frames, or a frame is a motion-blurred transition, say so and reconstruct
+   that stretch from the transcript rather than guessing — and route what you
+   can't verify to Open Questions.
+5. Reading **small text** (dashboard figures, tiny labels) off a frame is
+   error-prone. When a number or label is not clearly legible, mark it as a
+   lower-confidence read (Inferred, or Observed with a "approximate — read from
+   a small thumbnail" note) rather than asserting it as hard Observed.
 
 While reading, build a working map (jot it as notes if helpful):
 - **Screens:** each distinct screen/view, its layout, and visible components.
