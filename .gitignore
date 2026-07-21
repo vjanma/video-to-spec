@@ -1,0 +1,17 @@
+# whisper models (downloaded to ~/.cache by default, but just in case)
+models/
+*.bin
+
+# work artifacts if a run happens inside the repo
+v2prd-*/
+*.wav
+*.mp4
+*.mov
+*.webm
+*.mkv
+*.vtt
+*.srt
+frames/
+
+.DS_Store
+__pycache__/
