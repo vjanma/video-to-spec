@@ -20,14 +20,14 @@ Point it at a product demo and it will:
 
 ## Install
 
-**Option A — plugin install, straight from GitHub (recommended).** In any Claude Code session:
+**Option A — via the [tinkery](https://github.com/vjanma/tinkery) marketplace (recommended).** In any Claude Code session:
 
 ```
-/plugin marketplace add vjanma/video-to-prd
-/plugin install video-to-prd@video-to-prd
+/plugin marketplace add vjanma/tinkery
+/plugin install video-to-prd@tinkery
 ```
 
-The skill is then invoked as `/video-to-prd:video-to-prd`, and updates arrive via `/plugin marketplace update video-to-prd`.
+The skill is then invoked as `/video-to-prd:video-to-prd`, and updates arrive via `/plugin marketplace update tinkery`. (This repo also works as a standalone marketplace: `/plugin marketplace add vjanma/video-to-prd`.)
 
 **Option B — clone + symlink (personal skill, un-namespaced).**
 
