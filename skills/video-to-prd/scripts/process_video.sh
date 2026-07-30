@@ -18,9 +18,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INPUT="${1:-}"; WORKDIR="${2:-}"
 [ -n "$INPUT" ] && [ -n "$WORKDIR" ] || err "usage: process_video.sh <file-or-youtube-url> <workdir>"
 command -v ffmpeg >/dev/null || err "ffmpeg not found. Install with: brew install ffmpeg"
+command -v ffprobe >/dev/null || err "ffprobe not found (ships with ffmpeg). Install with: brew install ffmpeg"
 
-mkdir -p "$WORKDIR/frames"
+mkdir -p "$WORKDIR"
 WORKDIR="$(cd "$WORKDIR" && pwd)"
+# A reused workdir must start clean: stale captions/frames/audio from a
+# previous run would silently blend two different videos into one PRD.
+rm -rf "$WORKDIR/frames"
+rm -f "$WORKDIR"/video.* "$WORKDIR/captions.vtt" "$WORKDIR/audio.wav" \
+      "$WORKDIR/transcript.txt" "$WORKDIR/meta.txt" "$WORKDIR"/whisper_out.*
+mkdir -p "$WORKDIR/frames"
 
 # --- 1. Acquire the video -------------------------------------------------
 VIDEO=""
@@ -39,7 +46,11 @@ if [[ "$INPUT" =~ ^https?:// ]]; then
   [ -n "${SUB:-}" ] && mv "$SUB" "$WORKDIR/captions.vtt"
 else
   [ -f "$INPUT" ] || err "file not found: $INPUT"
-  ext="${INPUT##*.}"
+  base="$(basename "$INPUT")"
+  case "$base" in
+    *.*) ext="${base##*.}" ;;
+    *)   ext="input" ;;      # extensionless file; ffmpeg sniffs the container
+  esac
   cp "$INPUT" "$WORKDIR/video.$ext"
   VIDEO="$WORKDIR/video.$ext"
 fi
@@ -48,9 +59,15 @@ DURATION="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$VIDEO" 
 [ -n "$DURATION" ] || err "could not read video duration (unsupported format?)"
 
 # --- 2. Extract audio for whisper (skip if captions exist) ----------------
+# A silent recording (no audio stream) is valid input: the PRD is then built
+# from visuals alone, so skip extraction instead of letting ffmpeg abort.
 if [ ! -f "$WORKDIR/captions.vtt" ]; then
-  echo "Extracting audio..."
-  ffmpeg -y -v error -i "$VIDEO" -vn -ar 16000 -ac 1 -c:a pcm_s16le "$WORKDIR/audio.wav"
+  if ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$VIDEO" | grep -q .; then
+    echo "Extracting audio..."
+    ffmpeg -y -v error -i "$VIDEO" -vn -ar 16000 -ac 1 -c:a pcm_s16le "$WORKDIR/audio.wav"
+  else
+    echo "No audio stream found — silent recording; skipping audio extraction."
+  fi
 fi
 
 # --- 3. Keyframe selection ------------------------------------------------
@@ -70,7 +87,8 @@ detect_scenes() {   # $1=output file  $2=scene threshold
 
 CAND="$WORKDIR/cand_times.txt"
 detect_scenes "$CAND" 0.1
-NCAND="$(grep -c . "$CAND" 2>/dev/null || echo 0)"
+NCAND="$(grep -c . "$CAND" 2>/dev/null || true)"   # grep -c prints 0 itself on no match
+NCAND="${NCAND:-0}"
 if [ "$NCAND" -gt 120 ]; then
   echo "Very busy video ($NCAND changes) — raising threshold..."
   detect_scenes "$CAND" 0.25
@@ -99,4 +117,5 @@ NFRAMES="$(ls "$WORKDIR/frames" | wc -l | tr -d ' ')"
   echo "duration_seconds: $DURATION"
   echo "frames: $NFRAMES"
   echo "captions: $([ -f "$WORKDIR/captions.vtt" ] && echo yes || echo no)"
+  echo "audio: $([ -f "$WORKDIR/audio.wav" ] || [ -f "$WORKDIR/captions.vtt" ] && echo yes || echo no)"
 } | tee "$WORKDIR/meta.txt"

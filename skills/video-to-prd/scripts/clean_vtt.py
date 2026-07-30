@@ -50,7 +50,7 @@ def main(path: str) -> None:
     # Dedupe rolling captions: drop lines already emitted as the tail of the
     # previous cue's text.
     out = []
-    prev_words: list[str] = []
+    prev_words = []
     for ts, text in cues:
         words = text.split()
         # Find the longest suffix of prev_words that is a prefix of words.

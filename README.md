@@ -6,17 +6,28 @@ Point it at a product demo and it will:
 
 1. **Download / ingest the video** (yt-dlp for YouTube, ffmpeg for any local format)
 2. **Transcribe the narration** — free YouTube captions when available, otherwise local [whisper.cpp](https://github.com/ggerganov/whisper.cpp) transcription (Metal-accelerated on Apple Silicon, no API keys)
-3. **Screenshot key moments** — ffmpeg scene detection tuned for screen recordings finds every screen change; falls back to interval sampling for mostly-static recordings
+3. **Screenshot key moments** — ffmpeg scene detection tuned for screen recordings finds every screen change; frame selection guarantees coverage across the whole timeline, even for mostly-static recordings
 4. **Analyze both together** — Claude pairs each screenshot with the narration at that timestamp to understand screens, flows, features, and the implied data model
 5. **Write the PRD** — a text-only markdown document following PRD best practices: timestamped requirement citations, testable acceptance criteria, screen-by-screen UI specs, inferred data model, and open questions with recommended defaults — ready to hand to Claude Code, Cursor, or any AI coding tool
 
 ## Requirements
 
 - macOS or Linux with [Claude Code](https://claude.com/claude-code)
-- `ffmpeg` — `brew install ffmpeg`
+- `ffmpeg` (includes `ffprobe`) — `brew install ffmpeg`
+- `python3` and `curl` — preinstalled on most systems
 - `yt-dlp` (only for YouTube links) — `brew install yt-dlp`
 - `whisper-cpp` (only for videos without captions) — `brew install whisper-cpp`
   - First transcription downloads the whisper `small` model (~466MB, one-time) to `~/.cache/whisper-cpp/`
+
+The skill **preflights these for you**: before processing, it runs
+`scripts/check_deps.sh`, reports anything missing in one pass, and — with your
+say-so — installs the missing tools via Homebrew (`check_deps.sh --install`).
+On Linux or without Homebrew it prints the exact manual command instead. You can
+also run the check yourself:
+
+```bash
+bash skills/video-to-prd/scripts/check_deps.sh
+```
 
 ## Install
 
@@ -27,12 +38,13 @@ Point it at a product demo and it will:
 /plugin install video-to-prd@tinkery
 ```
 
-The skill is then invoked as `/video-to-prd:video-to-prd`, and updates arrive via `/plugin marketplace update tinkery`. (This repo also works as a standalone marketplace: `/plugin marketplace add vjanma/video-to-prd`.)
+The skill is then invoked as `/video-to-prd:video-to-prd`, and updates arrive via `/plugin marketplace update tinkery`. If the skill isn't visible right after installing, start a new Claude Code session. (This repo also works as a standalone marketplace: `/plugin marketplace add vjanma/video-to-prd`.)
 
 **Option B — clone + symlink (personal skill, un-namespaced).**
 
 ```bash
 git clone https://github.com/vjanma/video-to-prd.git
+mkdir -p ~/.claude/skills
 ln -s "$(pwd)/video-to-prd/skills/video-to-prd" ~/.claude/skills/video-to-prd
 ```
 

@@ -13,13 +13,44 @@ is provided, ask the user for one before doing anything else.
 All helper scripts live in this skill's `scripts/` directory (resolve the
 absolute path of this SKILL.md's directory first; call it `$SKILL_DIR`).
 
+## Step 0 — Preflight the toolchain
+
+Run the dependency check once before anything else:
+
+```bash
+bash "$SKILL_DIR/scripts/check_deps.sh"
+```
+
+Exit 0 means everything needed is present — continue. Exit 1 means something
+is missing; the output lists exactly what, split into **required** (`ffmpeg`,
+`python3`, `curl`) and **optional-per-path** (`yt-dlp` only for URLs,
+`whisper-cpp` only for caption-less videos — note a URL input can still need
+whisper-cpp if the video turns out to have no captions; you'll know after
+Step 1 from `meta.txt`).
+
+If required tools — or the optional tool for this input (yt-dlp for a URL,
+whisper-cpp for a local video that may lack narration) — are missing, **show
+the user the list and ask whether to install them**, naming the exact command
+(`brew install …`). Do not install without a clear yes. On approval, run
+`--install` naming exactly the packages the user approved:
+
+```bash
+bash "$SKILL_DIR/scripts/check_deps.sh" --install <approved-packages…>
+```
+
+which installs only those via Homebrew and re-verifies (bare `--install`
+installs only the missing *required* set, never optional tools). If Homebrew
+isn't present (or the user is on Linux), the report already printed the right
+manual command — relay it and let the user install, rather than proceeding to a
+step that will fail.
+
 ## Step 1 — Process the video
 
 Pick a work directory `$WORK` (use the session scratchpad if available,
 otherwise `mktemp -d`), then run:
 
 ```bash
-bash $SKILL_DIR/scripts/process_video.sh "<input>" "$WORK"
+bash "$SKILL_DIR/scripts/process_video.sh" "<input>" "$WORK"
 ```
 
 This downloads the video if it's a URL (1080p max — high enough that dense
@@ -30,7 +61,10 @@ changes to produce timestamped keyframes in `$WORK/frames/`
 (so a busy tail can't starve a content-rich intro), caps frames per time-bucket,
 drops near-duplicates, and offsets each capture past the transition so frames
 land on the settled screen rather than a motion-blurred crossfade. Read
-`$WORK/meta.txt` for duration, frame count, and whether captions were found.
+`$WORK/meta.txt` for duration, frame count, and whether captions and an audio
+stream were found. If it says `captions: no` and `whisper-cli` was reported
+missing in Step 0, pause here and get approval to install `whisper-cpp` before
+Step 2 — transcription will need it.
 
 If the script fails, show the user the error — common causes are a missing
 dependency (it names the `brew install` fix), a private/region-locked YouTube
@@ -39,7 +73,7 @@ video, or an unreadable file.
 ## Step 2 — Get the transcript
 
 ```bash
-bash $SKILL_DIR/scripts/transcribe.sh "$WORK"
+bash "$SKILL_DIR/scripts/transcribe.sh" "$WORK"
 ```
 
 Uses the downloaded captions when present; otherwise transcribes locally with

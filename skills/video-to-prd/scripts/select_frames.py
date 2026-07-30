@@ -64,10 +64,13 @@ def main():
             kept.append(f)
     kept.sort()
 
-    # Overall ceiling: thin evenly if still too many.
+    # Overall ceiling: thin evenly if still too many. Spreading MAX_TOTAL
+    # inclusive indices over 0..len-1 keeps both endpoints, so the forced
+    # first/last frames survive thinning.
     if len(kept) > MAX_TOTAL:
-        step = len(kept) / MAX_TOTAL
-        kept = [kept[int(i * step)] for i in range(MAX_TOTAL)]
+        step = (len(kept) - 1) / (MAX_TOTAL - 1)
+        idx = sorted({round(i * step) for i in range(MAX_TOTAL)})
+        kept = [kept[i] for i in idx]
 
     # 4. Settle offset, clamped into the valid range.
     hi = max(0.0, dur - 0.1)

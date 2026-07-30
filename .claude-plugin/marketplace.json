@@ -10,7 +10,7 @@
       "name": "video-to-prd",
       "source": "./",
       "description": "Turn a screen-recording video (local file or YouTube link) into an implementation-ready Product Requirements Document using scene-detection screenshots and audio transcription.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "Vj Anma"
       },
