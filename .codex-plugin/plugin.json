@@ -1,0 +1,31 @@
+{
+  "name": "video-to-prd",
+  "version": "1.1.0",
+  "description": "Turn a screen-recording video (local file or YouTube link) into an implementation-ready Product Requirements Document using scene-detection screenshots and audio transcription.",
+  "author": {
+    "name": "Vj Anma",
+    "email": "vjanma@gmail.com"
+  },
+  "homepage": "https://github.com/vjanma/video-to-prd",
+  "repository": "https://github.com/vjanma/video-to-prd",
+  "license": "Apache-2.0",
+  "keywords": [
+    "prd",
+    "product-requirements",
+    "video",
+    "screen-recording",
+    "youtube",
+    "transcription",
+    "whisper",
+    "spec"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Video to PRD",
+    "shortDescription": "Turn screen recordings into implementation-ready PRDs",
+    "longDescription": "Turn a screen-recording video (local file or YouTube link) into an implementation-ready Product Requirements Document using scene-detection screenshots and audio transcription.",
+    "developerName": "Vj Anma",
+    "category": "Productivity",
+    "websiteURL": "https://github.com/vjanma/video-to-prd"
+  }
+}
