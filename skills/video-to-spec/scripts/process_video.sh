@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# process_video.sh — turn a local video file or YouTube URL into analysis inputs.
+# process_video.sh: turn a local video file or YouTube URL into analysis inputs.
 #
 # Usage: process_video.sh <input: file path or YouTube URL> <workdir>
 #
@@ -23,7 +23,7 @@ command -v ffprobe >/dev/null || err "ffprobe not found (ships with ffmpeg). Ins
 mkdir -p "$WORKDIR"
 WORKDIR="$(cd "$WORKDIR" && pwd)"
 # A reused workdir must start clean: stale captions/frames/audio from a
-# previous run would silently blend two different videos into one PRD.
+# previous run would silently blend two different videos into one spec.
 rm -rf "$WORKDIR/frames"
 rm -f "$WORKDIR"/video.* "$WORKDIR/captions.vtt" "$WORKDIR/audio.wav" \
       "$WORKDIR/transcript.txt" "$WORKDIR/meta.txt" "$WORKDIR"/whisper_out.*
@@ -59,14 +59,14 @@ DURATION="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$VIDEO" 
 [ -n "$DURATION" ] || err "could not read video duration (unsupported format?)"
 
 # --- 2. Extract audio for whisper (skip if captions exist) ----------------
-# A silent recording (no audio stream) is valid input: the PRD is then built
+# A silent recording (no audio stream) is valid input: the spec is then built
 # from visuals alone, so skip extraction instead of letting ffmpeg abort.
 if [ ! -f "$WORKDIR/captions.vtt" ]; then
   if ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$VIDEO" | grep -q .; then
     echo "Extracting audio..."
     ffmpeg -y -v error -i "$VIDEO" -vn -ar 16000 -ac 1 -c:a pcm_s16le "$WORKDIR/audio.wav"
   else
-    echo "No audio stream found — silent recording; skipping audio extraction."
+    echo "No audio stream found (silent recording); skipping audio extraction."
   fi
 fi
 
@@ -75,7 +75,7 @@ fi
 # slide deck) fires many scene changes while a content-rich intro barely trips
 # the detector. We detect scene changes at a low threshold, drop adjacent
 # near-duplicates with mpdecimate, then hand the timestamps to select_frames.py
-# — which guarantees timeline coverage, caps frames per bucket, and offsets each
+# which guarantees timeline coverage, caps frames per bucket, and offsets each
 # capture past the transition so frames land on the settled screen, not a
 # motion-blurred crossfade.
 echo "Detecting screen changes..."
@@ -90,7 +90,7 @@ detect_scenes "$CAND" 0.1
 NCAND="$(grep -c . "$CAND" 2>/dev/null || true)"   # grep -c prints 0 itself on no match
 NCAND="${NCAND:-0}"
 if [ "$NCAND" -gt 120 ]; then
-  echo "Very busy video ($NCAND changes) — raising threshold..."
+  echo "Very busy video ($NCAND changes): raising threshold..."
   detect_scenes "$CAND" 0.25
 fi
 

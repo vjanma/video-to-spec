@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check_deps.sh — one-shot preflight for the video-to-prd toolchain.
+# check_deps.sh: one-shot preflight for the video-to-spec toolchain.
 #
 # Reports every missing dependency in a single pass (instead of failing one at a
 # time mid-run), and can install the missing ones via Homebrew on --install.
@@ -9,7 +9,7 @@
 #   check_deps.sh --install [pkg…]   install the named brew packages (or, with no
 #                                    names, just the missing REQUIRED ones), then re-report
 #
-# Only the caller (with the user's consent) should pass --install — the report
+# Only the caller (with the user's consent) should pass --install; the report
 # mode never modifies the system. --install never touches optional tools unless
 # they are named explicitly, so approval for one tool can't install another.
 set -euo pipefail
@@ -33,9 +33,9 @@ check_one() {  # $1=command  $2=brew-package  $3=required|optional  $4=note
     return 0
   fi
   if [ "$req" = required ]; then
-    printf '  ❌ %-12s MISSING (required) — %s  [brew install %s]\n' "$cmd" "$note" "$pkg"
+    printf '  ❌ %-12s MISSING (required): %s  [brew install %s]\n' "$cmd" "$note" "$pkg"
   else
-    printf '  ⚠️  %-12s missing (optional) — %s  [brew install %s]\n' "$cmd" "$note" "$pkg"
+    printf '  ⚠️  %-12s missing (optional): %s  [brew install %s]\n' "$cmd" "$note" "$pkg"
   fi
   return 1
 }
@@ -53,7 +53,7 @@ DEPS=(
 missing_required=()
 missing_optional=()
 
-echo "video-to-prd dependency check:"
+echo "video-to-spec dependency check:"
 for rec in "${DEPS[@]}"; do
   IFS=: read -r cmd pkg req note <<<"$rec"
   if ! check_one "$cmd" "$pkg" "$req" "$note"; then
@@ -87,7 +87,7 @@ if [ "$MODE" != "--install" ]; then
     echo "Or re-run this script with --install to install the missing tools."
   else
     # Linux package names differ from Homebrew's (python -> python3, and
-    # whisper-cpp isn't packaged — it's built from source).
+    # whisper-cpp isn't packaged; it's built from source).
     linux_pkgs="${to_install[*]}"
     linux_pkgs="${linux_pkgs//whisper-cpp/}"
     linux_pkgs="${linux_pkgs//python/python3}"
@@ -100,15 +100,15 @@ if [ "$MODE" != "--install" ]; then
 fi
 
 # --- --install mode -------------------------------------------------------
-# Install only what was approved: the explicitly named packages, or — with no
-# names — just the missing required set. Optional tools are never implied.
+# Install only what was approved: the explicitly named packages, or (with no
+# names) just the missing required set. Optional tools are never implied.
 if [ "${#APPROVED[@]}" -gt 0 ]; then
   install_set=("${APPROVED[@]}")
 else
   install_set=(${missing_required[@]+"${missing_required[@]}"})
   if [ "${#missing_optional[@]}" -gt 0 ]; then
     echo
-    echo "Note: not installing optional tools (${missing_optional[*]}) — name them explicitly to include them."
+    echo "Note: not installing optional tools (${missing_optional[*]}): name them explicitly to include them."
   fi
 fi
 

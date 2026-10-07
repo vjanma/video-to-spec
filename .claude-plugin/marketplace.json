@@ -1,30 +1,33 @@
 {
-  "name": "video-to-prd",
+  "name": "video-to-spec",
   "owner": {
     "name": "Vj Anma",
     "email": "vjanma@gmail.com"
   },
-  "description": "Marketplace for the video-to-prd plugin: convert screen recordings into implementation-ready PRDs.",
+  "description": "Marketplace for the video-to-spec plugin: convert screen recordings into spec-driven development specifications.",
   "plugins": [
     {
-      "name": "video-to-prd",
+      "name": "video-to-spec",
       "source": "./",
-      "description": "Turn a screen-recording video (local file or YouTube link) into an implementation-ready Product Requirements Document using scene-detection screenshots and audio transcription.",
-      "version": "1.1.0",
+      "description": "Turn a screen-recording video (local file or YouTube link) into a spec-driven development specification (Spec Kit spec.md with EARS requirements, user stories, success criteria, and clarifications) plus screen-by-screen UI evidence, using scene-detection screenshots and audio transcription.",
+      "version": "2.0.0",
       "author": {
         "name": "Vj Anma"
       },
-      "homepage": "https://github.com/vjanma/video-to-prd",
-      "repository": "https://github.com/vjanma/video-to-prd",
+      "homepage": "https://github.com/vjanma/video-to-spec",
+      "repository": "https://github.com/vjanma/video-to-spec",
       "license": "Apache-2.0",
       "category": "productivity",
       "keywords": [
+        "spec",
+        "spec-driven-development",
+        "spec-kit",
+        "ears",
+        "requirements",
         "prd",
-        "product-requirements",
         "video",
         "screen-recording",
-        "youtube",
-        "transcription"
+        "youtube"
       ]
     }
   ]

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# transcribe.sh — produce <workdir>/transcript.txt with [MM:SS]-timestamped lines.
+# transcribe.sh: produce <workdir>/transcript.txt with [MM:SS]-timestamped lines.
 #
 # Prefers captions.vtt (free, from YouTube). Falls back to local whisper.cpp
 # transcription of audio.wav, downloading the small model once if needed.
@@ -18,10 +18,10 @@ if [ -f "$WORKDIR/captions.vtt" ]; then
   python3 "$SCRIPT_DIR/clean_vtt.py" "$WORKDIR/captions.vtt" > "$WORKDIR/transcript.txt"
 elif [ ! -f "$WORKDIR/audio.wav" ]; then
   # process_video.sh writes meta.txt last; if it exists but audio.wav doesn't,
-  # the recording is silent (no audio stream) — not a missing pipeline step.
+  # the recording is silent (no audio stream), which is not a missing pipeline step.
   [ -f "$WORKDIR/meta.txt" ] || err "no audio.wav in $WORKDIR (run process_video.sh first)"
   : > "$WORKDIR/transcript.txt"
-  echo "NOTE: this recording has no audio — transcript is empty; the PRD will be built from visuals alone."
+  echo "NOTE: this recording has no audio: transcript is empty, and the spec will be built from visuals alone."
   exit 0
 else
   command -v whisper-cli >/dev/null || err "whisper-cli not found. Install with: brew install whisper-cpp"
@@ -62,7 +62,7 @@ fi
 
 LINES="$(wc -l < "$WORKDIR/transcript.txt" | tr -d ' ')"
 if [ "$LINES" -eq 0 ]; then
-  echo "NOTE: transcript came out empty — the video appears to have no narration; the PRD will be built from visuals alone."
+  echo "NOTE: transcript came out empty: the video appears to have no narration; the spec will be built from visuals alone."
   exit 0
 fi
 echo "Transcript ready: $WORKDIR/transcript.txt ($LINES lines)"

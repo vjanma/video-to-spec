@@ -7,11 +7,11 @@ the detector. Feeding raw scene timestamps straight to the extractor therefore
 over-samples the busy tail and starves the rest of the timeline.
 
 This helper turns candidate timestamps into a well-distributed final set by:
-  1. Guaranteeing timeline coverage — every time-bucket with no candidate gets
+  1. Guaranteeing timeline coverage: every time-bucket with no candidate gets
      its midpoint, so no region of the video is left unrepresented.
-  2. Capping frames per bucket — a busy stretch can't dominate the budget.
-  3. Enforcing a minimum gap between kept frames — drops rapid-fire duplicates.
-  4. Offsetting each timestamp a beat past the transition — frames land on the
+  2. Capping frames per bucket: a busy stretch can't dominate the budget.
+  3. Enforcing a minimum gap between kept frames: drops rapid-fire duplicates.
+  4. Offsetting each timestamp a beat past the transition: frames land on the
      settled screen instead of mid-crossfade (which is usually motion-blurred).
   5. Always including the first and last of the video.
 

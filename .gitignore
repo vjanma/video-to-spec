@@ -3,7 +3,8 @@ models/
 *.bin
 
 # work artifacts if a run happens inside the repo
-v2prd-*/
+v2spec-*/
+spec-*/
 *.wav
 *.mp4
 *.mov

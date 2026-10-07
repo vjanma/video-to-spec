@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""clean_vtt.py — collapse a (possibly rolling) WebVTT caption file into
+"""clean_vtt.py: collapse a (possibly rolling) WebVTT caption file into
 clean timestamped transcript lines: "[MM:SS] text".
 
 YouTube auto-captions repeat text across overlapping cues; this dedupes them.
