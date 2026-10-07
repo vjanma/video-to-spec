@@ -36,10 +36,19 @@ if [[ "$INPUT" =~ ^https?:// ]]; then
   echo "Downloading video (<=1080p) and captions..."
   # 1080p (not 720p): demo UIs are text-dense; the extra resolution keeps
   # dashboard numbers and small labels legible in the extracted keyframes.
-  yt-dlp -f "bv*[height<=1080]+ba/b[height<=1080]/b" \
+  # Keep yt-dlp's output visible but also logged, so a failure can be diagnosed.
+  YTLOG="$WORKDIR/yt-dlp.log"
+  if ! yt-dlp -f "bv*[height<=1080]+ba/b[height<=1080]/b" \
     --write-auto-subs --write-subs --sub-format vtt --sub-langs "en.*,en" \
     -o "$WORKDIR/video.%(ext)s" \
-    --no-playlist "$INPUT" >&2
+    --no-playlist "$INPUT" 2>&1 | tee "$YTLOG" >&2; then
+    # YouTube changes its player often; an outdated yt-dlp then gets refused
+    # (seen 2026-10-07: HTTP 403 on 2026.03.17, fixed by upgrading).
+    if grep -q -E "HTTP Error 403|Sign in to confirm|page needs to be reloaded|nsig extraction failed" "$YTLOG"; then
+      err "YouTube refused the download (yt-dlp $(yt-dlp --version 2>/dev/null || echo unknown)). Older yt-dlp releases are routinely blocked; update with: brew upgrade yt-dlp (or yt-dlp -U), then retry. If it still fails, the video may be private, age-gated, or region-locked."
+    fi
+    err "download failed (see yt-dlp output above): the video may be private, region-locked, or the URL invalid."
+  fi
   VIDEO="$(find "$WORKDIR" -maxdepth 1 -name 'video.*' ! -name '*.vtt' ! -name '*.part' | head -1)"
   [ -n "$VIDEO" ] || err "download failed: no video file produced"
   SUB="$(find "$WORKDIR" -maxdepth 1 -name 'video.*.vtt' | head -1)"

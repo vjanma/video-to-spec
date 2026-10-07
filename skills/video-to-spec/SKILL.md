@@ -70,8 +70,9 @@ and get approval to install `whisper-cpp` before Step 2, since transcription
 will need it.
 
 If the script fails, show the user the error. Common causes are a missing
-dependency (it names the `brew install` fix), a private or region-locked
-YouTube video, or an unreadable file.
+dependency (it names the `brew install` fix), an outdated yt-dlp that YouTube
+refuses (it names `brew upgrade yt-dlp`; ask before upgrading, as with
+installs), a private or region-locked YouTube video, or an unreadable file.
 
 ## Step 2: Get the transcript
 

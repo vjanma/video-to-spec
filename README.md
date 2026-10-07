@@ -92,6 +92,8 @@ It never overwrites an existing `spec.md`, and it does not create a git branch.
 
 Narration-only claims in a promo video are never written up as demonstrated behavior, and nothing requires watching the video to understand.
 
+See [examples/](examples/) for a real run on a 3-minute product demo.
+
 ## How it works
 
 ```
@@ -112,6 +114,7 @@ specs/NNN-<name>/spec.md + ui-evidence.md
 
 ```bash
 bash tests/test_spec_target.sh
+bash tests/test_download_hint.sh
 ```
 
 The change spec for 2.0.0 is in [docs/spec-2.0.0.md](docs/spec-2.0.0.md). The bundled `references/spec-template.md` is a copy of the personal preset template; re-sync it when the preset changes.

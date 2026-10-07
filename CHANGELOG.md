@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1 (2026-10-07)
+
+- When YouTube refuses a download (HTTP 403, bot check, reload page, nsig failure), `process_video.sh` now names the fix, `brew upgrade yt-dlp`, and shows the installed version. Other download failures keep a generic message. Tests in `tests/test_download_hint.sh`.
+- Add `examples/agentic-venture-os/`, real output from a 3-minute product demo.
+
 ## 2.0.0 (2026-10-07)
 
 Renamed from **video-to-prd** to **video-to-spec**. The output is now a spec-driven development specification instead of a PRD.
