@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.2 (2026-10-08)
+
+- Fix YouTube downloads failing outright on videos with human captions. yt-dlp also requested the machine-translated `en-en-US` track, YouTube refused it with HTTP 429, and the failed caption aborted the video download. Caption languages now skip `en-en*` tracks.
+- If a caption download still fails, `process_video.sh` retries the video without captions so whisper can transcribe it, instead of stopping.
+- With several caption tracks, a region-coded one (such as `en-US`, usually the uploader's human captions) is now preferred over auto-generated `en` and `en-orig`.
+- Tests for all three in `tests/test_download_hint.sh`.
+
 ## 2.0.1 (2026-10-07)
 
 - When YouTube refuses a download (HTTP 403, bot check, reload page, nsig failure), `process_video.sh` now names the fix, `brew upgrade yt-dlp`, and shows the installed version. Other download failures keep a generic message. Tests in `tests/test_download_hint.sh`.

@@ -1,7 +1,7 @@
 {
   "name": "video-to-spec",
   "displayName": "Video to Spec",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Turn a screen-recording video (local file or YouTube link) into a spec-driven development specification (Spec Kit spec.md with EARS requirements, user stories, success criteria, and clarifications) plus screen-by-screen UI evidence, using scene-detection screenshots and audio transcription.",
   "author": {
     "name": "Vj Anma",

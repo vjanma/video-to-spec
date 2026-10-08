@@ -38,10 +38,20 @@ if [[ "$INPUT" =~ ^https?:// ]]; then
   # dashboard numbers and small labels legible in the extracted keyframes.
   # Keep yt-dlp's output visible but also logged, so a failure can be diagnosed.
   YTLOG="$WORKDIR/yt-dlp.log"
-  if ! yt-dlp -f "bv*[height<=1080]+ba/b[height<=1080]/b" \
-    --write-auto-subs --write-subs --sub-format vtt --sub-langs "en.*,en" \
-    -o "$WORKDIR/video.%(ext)s" \
-    --no-playlist "$INPUT" 2>&1 | tee "$YTLOG" >&2; then
+  ytdl() { # ytdl [extra yt-dlp args...]
+    yt-dlp -f "bv*[height<=1080]+ba/b[height<=1080]/b" "$@" \
+      -o "$WORKDIR/video.%(ext)s" \
+      --no-playlist "$INPUT" 2>&1 | tee "$YTLOG" >&2
+  }
+  # "-en-en.*" drops machine-translated tracks (en-en-US): YouTube rate-limits
+  # them with HTTP 429, and one failed caption aborts the whole download
+  # (seen 2026-10-08). Matching is case-insensitive, so en-US stays.
+  if ! ytdl --write-auto-subs --write-subs --sub-format vtt --sub-langs "en.*,en,-en-en.*" \
+    && grep -q "Unable to download video subtitles" "$YTLOG"; then
+    echo "Captions failed to download; retrying the video without captions (whisper will transcribe)..." >&2
+    ytdl || true
+  fi
+  if [ -z "$(find "$WORKDIR" -maxdepth 1 -name 'video.*' ! -name '*.vtt' ! -name '*.part' | head -1)" ]; then
     # YouTube changes its player often; an outdated yt-dlp then gets refused
     # (seen 2026-10-07: HTTP 403 on 2026.03.17, fixed by upgrading).
     if grep -q -E "HTTP Error 403|Sign in to confirm|page needs to be reloaded|nsig extraction failed" "$YTLOG"; then
@@ -51,8 +61,14 @@ if [[ "$INPUT" =~ ^https?:// ]]; then
   fi
   VIDEO="$(find "$WORKDIR" -maxdepth 1 -name 'video.*' ! -name '*.vtt' ! -name '*.part' | head -1)"
   [ -n "$VIDEO" ] || err "download failed: no video file produced"
-  SUB="$(find "$WORKDIR" -maxdepth 1 -name 'video.*.vtt' | head -1)"
-  [ -n "${SUB:-}" ] && mv "$SUB" "$WORKDIR/captions.vtt"
+  # Prefer a region-coded track (en-US, en-GB): on YouTube that is usually the
+  # uploader's human captions, while en and en-orig are auto-generated.
+  SUB=""
+  for f in "$WORKDIR"/video.en-*.vtt "$WORKDIR"/video.*.vtt; do
+    [ -f "$f" ] && [ "$f" != "$WORKDIR/video.en-orig.vtt" ] && { SUB="$f"; break; }
+  done
+  [ -z "$SUB" ] && [ -f "$WORKDIR/video.en-orig.vtt" ] && SUB="$WORKDIR/video.en-orig.vtt"
+  [ -n "$SUB" ] && mv "$SUB" "$WORKDIR/captions.vtt"
 else
   [ -f "$INPUT" ] || err "file not found: $INPUT"
   base="$(basename "$INPUT")"
